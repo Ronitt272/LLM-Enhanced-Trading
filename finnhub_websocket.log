@@ -1,0 +1,22 @@
+2024-12-13 12:44:23,911 - INFO - Websocket connected
+2024-12-13 12:44:23,912 - INFO - Subscribed to: NFLX
+2024-12-13 12:45:01,032 - INFO - Cache dumped and saved to 20241213_124501.txt
+2024-12-13 12:45:01,033 - INFO - VWAP results updated
+2024-12-13 12:45:02,988 - INFO - Attempting to summarize text of length 1912 characters.
+2024-12-13 12:45:05,018 - INFO - HTTP Request: POST https://api.cohere.com/v1/summarize "HTTP/1.1 200 OK"
+2024-12-13 12:45:05,022 - INFO - Received summary from Cohere successfully.
+2024-12-13 12:45:05,023 - INFO - Attempting to summarize text of length 79 characters.
+2024-12-13 12:45:05,038 - WARNING - Text is shorter than 250 characters, skipping summarization and returning original text.
+2024-12-13 12:45:05,041 - INFO - Aggregated and summarized text data successfully.
+2024-12-13 12:45:05,041 - INFO - Text aggregation and summarization completed at 2024-12-13 12:45:05.041260
+2024-12-13 12:45:05,822 - INFO - VWAP updated for signal calculation at 2024-12-13 12:45:05.822284
+2024-12-13 12:46:00,391 - INFO - Cache dumped and saved to 20241213_124600.txt
+2024-12-13 12:46:00,392 - INFO - VWAP results updated
+2024-12-13 12:46:01,880 - INFO - Attempting to summarize text of length 1912 characters.
+2024-12-13 12:46:05,020 - INFO - HTTP Request: POST https://api.cohere.com/v1/summarize "HTTP/1.1 200 OK"
+2024-12-13 12:46:05,023 - INFO - Received summary from Cohere successfully.
+2024-12-13 12:46:05,024 - INFO - Attempting to summarize text of length 79 characters.
+2024-12-13 12:46:05,024 - WARNING - Text is shorter than 250 characters, skipping summarization and returning original text.
+2024-12-13 12:46:05,027 - INFO - Aggregated and summarized text data successfully.
+2024-12-13 12:46:05,028 - INFO - Text aggregation and summarization completed at 2024-12-13 12:46:05.028272
+2024-12-13 12:46:05,823 - INFO - VWAP updated for signal calculation at 2024-12-13 12:46:05.823629

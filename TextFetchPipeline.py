@@ -1,17 +1,19 @@
 from datetime import datetime, timedelta
 import praw
-import cohere 
+import cohere
 from newsapi import NewsApiClient
-import pandas as pd 
+import pandas as pd
 from datetime import datetime
-import logging 
+import logging
 import pytz
-import time 
-import warnings 
+import time
+import warnings
+
 warnings.filterwarnings('ignore')
 
+
 class TextFetchPipeline:
-    def __init__(self, news_api_key, reddit_client_id, reddit_client_secret, reddit_user_agent,cohere_key):
+    def __init__(self, news_api_key, reddit_client_id, reddit_client_secret, reddit_user_agent, cohere_key):
         # Initialize APIs
         self.news_api = NewsApiClient(api_key=news_api_key)
         self.reddit = praw.Reddit(
@@ -19,11 +21,11 @@ class TextFetchPipeline:
             client_secret=reddit_client_secret,
             user_agent=reddit_user_agent
         )
-        
+
         # Cache to avoid duplicate processing
         self.news_cache = set()
         self.reddit_cache = set()
-        
+
         # Ticker to company name mapping
         self.tickers = {
             'TSLA': "Tesla",
@@ -44,15 +46,9 @@ class TextFetchPipeline:
             ],
         )
 
-
     def fetch_news(self, ticker):
         """
         Fetch latest news headlines for the ticker or company name.
-        Args:
-            ticker (str): Ticker symbol (e.g., "TSLA").
-            company_name (str): Company name (e.g., "Tesla").
-        Returns:
-            list: List of new, unique news headlines with associated ticker.
         """
         company_name = self.tickers[ticker]
         now = datetime.utcnow()
@@ -84,15 +80,11 @@ class TextFetchPipeline:
     def fetch_reddit(self, ticker):
         """
         Fetch Reddit posts containing the ticker from r/wallstreetbets.
-        Args:
-            ticker (str): Ticker symbol (e.g., "TSLA").
-        Returns:
-            list: List of dictionaries with Reddit post titles and associated ticker.
         """
         company_name = self.tickers[ticker]
         reddit_posts = []
         current_time_utc = datetime.utcnow().replace(tzinfo=pytz.UTC)  # Ensure current time is in UTC
-        
+
         # Ensure the cache contains tuples (post_id, timestamp)
         if self.reddit_cache and not all(isinstance(item, tuple) and len(item) == 2 for item in self.reddit_cache):
             self.reddit_cache = set()
@@ -106,9 +98,10 @@ class TextFetchPipeline:
         for post in self.reddit.subreddit("wallstreetbets").new(limit=50):
             text = post.selftext.lower()  # Ensure case-insensitive matching
             post_time_utc = datetime.fromtimestamp(post.created_utc, pytz.UTC)  # Convert post time to UTC
-            
-            # Check cache and if the ticker/company name appears in the post title
-            if (post.id, post_time_utc) not in self.reddit_cache and (ticker.lower() in text or company_name.lower() in text):
+
+            # Check cache and if the ticker/company name appears in the post text
+            if (post.id, post_time_utc) not in self.reddit_cache and (
+                    ticker.lower() in text or company_name.lower() in text):
                 reddit_posts.append({"source": "reddit", "text": text, "ticker": ticker})
                 self.reddit_cache.add((post.id, post_time_utc))  # Add to cache
 
@@ -116,9 +109,7 @@ class TextFetchPipeline:
 
     def fetch_combined_data(self):
         """
-        Fetch data from news and Reddit for all tickers and prepare for sentiment analysis.
-        Returns:
-            pd.DataFrame: Combined data with columns 'source', 'text', and 'ticker'.
+        Fetch data from news and Reddit for all tickers.
         """
         combined_data = []
         for ticker in self.tickers.keys():
@@ -128,31 +119,40 @@ class TextFetchPipeline:
             combined_data.extend(news_data + reddit_data)
 
         return combined_data
-    
-    def summarize_text(self,text):
+
+    def summarize_text(self, text):
         """
         Summarizes the text using Cohere's API.
-
-        Args:
-            text (str): The input text to summarize.
-
-        Returns:
-            str: The summarized text 
         """
-        response = self.co.summarize(
-              text=text,
-              length="short",  
-              format="paragraph",  
-              model="summarize-xlarge" 
-          )
-        return response.summary 
+        text_length = len(text)
+        logging.info(f"Attempting to summarize text of length {text_length} characters.")
+
+        # Log the text (truncated if very long)
+        max_preview_len = 500
+        preview_text = text[:max_preview_len] + ("..." if text_length > max_preview_len else "")
+        logging.debug(f"Text to summarize (preview): {preview_text}")
+
+        if text_length < 250:
+            logging.warning("Text is shorter than 250 characters, skipping summarization and returning original text.")
+            return text
+
+        try:
+            response = self.co.summarize(
+                text=text,
+                length="short",
+                format="paragraph",
+                model="summarize-xlarge"
+            )
+            logging.info("Received summary from Cohere successfully.")
+            logging.debug(f"Summary result: {response.summary}")
+            return response.summary
+        except Exception as e:
+            logging.error(f"Error while summarizing text: {str(e)}")
+            return text
 
     def process_combined_data_with_summary(self):
         """
         Processes the data fetched from the pipeline to include time, aggregated texts, and summaries.
-
-        Returns:
-            None: Updates self.agg_text with aggregated and summarized text for each ticker.
         """
         try:
             # Define EST timezone
@@ -187,6 +187,12 @@ class TextFetchPipeline:
                 "text": lambda texts: " ".join(texts)  # Concatenate all texts for each ticker
             }).reset_index()
 
+            # Debug log each ticker’s aggregated text
+            for idx, row in aggregated_df.iterrows():
+                t = row["ticker"]
+                txt = row["text"]
+                logging.debug(f"Aggregated text for {t}: {txt}")
+
             # Summarize aggregated texts
             aggregated_df["summary"] = aggregated_df["text"].apply(self.summarize_text)
 
@@ -200,10 +206,10 @@ class TextFetchPipeline:
                     self.agg_text[ticker] = ""
 
             logging.info("Aggregated and summarized text data successfully.")
-        
+
         except Exception as e:
             logging.error(f"Error in processing combined data with summary: {str(e)}")
-    
+
     def run_periodically(self):
         """
         Periodically process combined data and update summaries at the start of every minute.
@@ -220,6 +226,3 @@ class TextFetchPipeline:
                 logging.info(f"Text aggregation and summarization completed at {datetime.now()}")
             except Exception as e:
                 logging.error(f"Error during periodic text aggregation: {str(e)}")
-
-
-

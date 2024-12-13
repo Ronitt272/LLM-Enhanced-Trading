@@ -3,61 +3,37 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from pydantic import BaseModel
 from typing import List
 import uvicorn
-import logging 
+import logging
 from datetime import datetime
+import threading
+import time
+from html import escape
+
+# Importing custom modules
 from LiveStockPricePipeline import FinnhubWebSocket
 from TextFetchPipeline import TextFetchPipeline
 from SignalGenerator import SignalGeneration
-import threading
-from html import escape
-import time 
 
 app = FastAPI()
 
-# Example keys if needed
+# Global references
+tickers = []
+stock_pipeline = None
+text_pipeline = None
+signal_generator = None
+pipeline_threads = []
+last_selected_ticker = None
+
+# Track the currently running ticker to avoid unnecessary restarts
+current_ticker = None
+
+# Example keys (replace with your own)
 reddit_client_secret = 'sfFdYwuZWqofiqro51zGlKcJiC2YiQ'
 reddit_client_id = 'mNEnO4swPUjezEf92dxgxg'
 reddit_user_agent = 'LLM class project'
 news_api_key = '4703e4dcf50c47e1b390c81a6d0f0080'
 cohere_key = 'g1jNECQNHhEnlRhvMjba89qnPdeEPch9SvhmFMiN'
 finnhub_token = 'ctahnvpr01qrt5hhnbg0ctahnvpr01qrt5hhnbgg'
-tickers = ['AAPL','AMZN','TSLA']
-
-text_pipeline = TextFetchPipeline(
-    news_api_key,
-    reddit_client_id,
-    reddit_client_secret,
-    reddit_user_agent,
-    cohere_key
-)
-
-stock_pipeline = FinnhubWebSocket(finnhub_token,tickers)
-
-signal_generator = SignalGeneration(buffer_size=30)
-
-
-# Start the WebSocket in a separate thread when the application starts
-@app.on_event("startup")
-def start_websocket():
-    threading.Thread(target=stock_pipeline.start, daemon=True).start()
-
-
-@app.on_event("startup")
-def start_vwap_collection():
-    data_thread = threading.Thread(
-        target=signal_generator.collect_vwap,
-        args=(stock_pipeline,),
-        daemon=True
-    )
-    data_thread.start()
-
-@app.on_event("startup")
-def start_text_aggregation():
-    aggregation_thread = threading.Thread(
-        target=text_pipeline.run_periodically,
-        daemon=True
-    )
-    aggregation_thread.start()
 
 class CombinedData(BaseModel):
     ticker: str
@@ -72,150 +48,168 @@ class CombinedData(BaseModel):
     Oscillator: int
     Signal: int
 
-
-@app.get("/mock_data", response_model=List[CombinedData])
-def get_mock_data():
+def stop_pipelines():
     """
-    Fetch the latest VWAP values and trading signals dynamically.
+    Placeholder for a pipeline stop logic.
+    If your pipeline classes support stopping, implement it here.
+    For now, just reset references.
     """
-    # Fetch the latest VWAP values from the stock pipeline
-    latest_vwap = stock_pipeline.latest_vwap  # Dynamically fetch VWAP
-    # Fetch the latest signals from the signal generator
-    latest_signals = signal_generator.get_signals()  # Fetch generated signals
-    # Fetch the latest news and reddit from the text pipeline 
-    latest_news = text_pipeline.agg_text
-    # Current timestamp
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    global stock_pipeline, text_pipeline, signal_generator, pipeline_threads
+    # In a real scenario, set flags or call shutdown methods on pipeline classes.
+    stock_pipeline = None
+    text_pipeline = None
+    signal_generator = None
+    pipeline_threads = []
 
-    # Generate mock data using both VWAP and signals
-    mock_data = [
-        CombinedData(
-            ticker="AAPL",
-            VWAP=latest_vwap.get("AAPL", 175.23),
-            time=current_time,
-            text=latest_news.get("AAPL","No data available."),
-            sentiment=1,
-            probability=0.89,
-            MA_Crossover=latest_signals.get("AAPL", {}).get("SMA", 0),
-            RSI=latest_signals.get("AAPL", {}).get("RSI", 0),
-            Breakout=0,  # Placeholder if there's no Breakout signal
-            Oscillator=latest_signals.get("AAPL", {}).get("Stochastic", 0),
-            Signal=1
-        ),
-        CombinedData(
-            ticker="AMZN",
-            VWAP=latest_vwap.get("AMZN", 224.55),
-            time=current_time,
-            text=latest_news.get("AMZN","No data available."),
-            sentiment=1,
-            probability=0.85,
-            MA_Crossover=latest_signals.get("AMZN", {}).get("SMA", 0),
-            RSI=latest_signals.get("AMZN", {}).get("RSI", 0),
-            Breakout=0,
-            Oscillator=latest_signals.get("AMZN", {}).get("Stochastic", 0),
-            Signal=1
-        ),
-        CombinedData(
-            ticker="TSLA",
-            VWAP=latest_vwap.get("TSLA", 400.45),
-            time=current_time,
-            text=latest_news.get("TSLA","No data available."),
-            sentiment=1,
-            probability=0.92,
-            MA_Crossover=latest_signals.get("TSLA", {}).get("SMA", 0),
-            RSI=latest_signals.get("TSLA", {}).get("RSI", 0),
-            Breakout=0,
-            Oscillator=latest_signals.get("TSLA", {}).get("Stochastic", 0),
-            Signal=1
-        ),
-    ]
+def start_pipelines():
+    global stock_pipeline, text_pipeline, signal_generator, pipeline_threads, current_ticker
 
-    return mock_data
+    # Clear old threads
+    pipeline_threads = []
 
+    text_pipeline = TextFetchPipeline(
+        news_api_key,
+        reddit_client_id,
+        reddit_client_secret,
+        reddit_user_agent,
+        cohere_key
+    )
 
-# A list to store the trade logs
-trade_log = []
+    stock_pipeline = FinnhubWebSocket(finnhub_token, tickers)
+    signal_generator = SignalGeneration(buffer_size=30)
+
+    # Start the pipelines in separate threads
+    ws_thread = threading.Thread(target=stock_pipeline.start, daemon=True)
+    ws_thread.start()
+
+    vwap_thread = threading.Thread(target=signal_generator.collect_vwap, args=(stock_pipeline,), daemon=True)
+    vwap_thread.start()
+
+    text_thread = threading.Thread(target=text_pipeline.run_periodically, daemon=True)
+    text_thread.start()
+
+    pipeline_threads = [ws_thread, vwap_thread, text_thread]
 
 def signal_icon(value: int) -> str:
-    """Returns a checkmark if value=1, or a cross if value=0."""
-    return "✔" if value == 1 else "✘"
+    if value == 1:
+        return "✅"
+    elif value == -1:
+        return "❌"
+    return "Hold"
 
 @app.get("/", response_class=HTMLResponse)
-async def dashboard():
+async def home():
     html_content = """
     <!DOCTYPE html>
     <html>
     <head>
         <title>Stock Dashboard</title>
+    </head>
+    <body>
+        <h1>Enter a Stock Ticker</h1>
+        <form action="/select_ticker" method="post">
+            <input type="text" name="ticker" placeholder="e.g. AAPL" required>
+            <button type="submit">Submit</button>
+        </form>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content)
+
+@app.post("/select_ticker")
+async def select_ticker(ticker: str = Form(...)):
+    global tickers, last_selected_ticker, current_ticker
+
+    ticker = ticker.upper().strip()
+
+    # If the user selects the same ticker again, no need to restart pipelines
+    if ticker != current_ticker:
+        # Stop existing pipelines if any
+        stop_pipelines()
+
+        # Update the global ticker list to only contain the user-selected ticker
+        tickers = [ticker]
+        last_selected_ticker = ticker
+        current_ticker = ticker
+
+        # Start fresh pipelines
+        start_pipelines()
+
+    # Continuously wait until data is ready
+    while True:
+        if stock_pipeline is None or signal_generator is None or text_pipeline is None:
+            time.sleep(0.5)
+            continue
+
+        latest_vwap = stock_pipeline.latest_vwap.get(ticker, None)
+        latest_text = text_pipeline.agg_text.get(ticker, None)
+        latest_signals = signal_generator.get_signals().get(ticker, {})
+
+        if latest_vwap is not None and latest_text is not None and len(latest_signals) > 0:
+            return RedirectResponse(url="/dashboard", status_code=303)
+
+        time.sleep(0.5)
+
+# Dummy trade log and endpoints for buying/selling
+trade_log = []
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard():
+    global last_selected_ticker, current_ticker, trade_log
+    ticker = last_selected_ticker
+    if ticker is None:
+        return HTMLResponse(content="<h2>No ticker selected.</h2>")
+
+    # Fetch data again
+    if stock_pipeline is None or text_pipeline is None or signal_generator is None:
+        return HTMLResponse(content="<h2>Pipeline not running. Please go back and select a ticker.</h2>")
+
+    latest_vwap = stock_pipeline.latest_vwap.get(ticker, 0.0)
+    latest_signals = signal_generator.get_signals().get(ticker, {})
+    latest_news = text_pipeline.agg_text.get(ticker, "No data available.")
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    sentiment = 1
+    probability = 0.9
+    ma_cross = latest_signals.get("SMA", 0)
+    rsi = latest_signals.get("RSI", 0)
+    osc = latest_signals.get("Stochastic", 0)
+    signal = 1  # Placeholder aggregated signal
+    breakout = 0
+
+    # Generate trade log HTML
+    if not trade_log:
+        trade_log_html = "<p>No trades have been made yet.</p>"
+    else:
+        trade_log_html = "<ul>"
+        for entry in trade_log:
+            trade_log_html += f"<li>{escape(entry)}</li>"
+        trade_log_html += "</ul>"
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Stock Dashboard for {escape(ticker)}</title>
         <style>
-            table {
+            table {{
                 width: 100%;
                 border-collapse: collapse;
-            }
-            th, td {
+            }}
+            th, td {{
                 padding: 10px;
                 text-align: center;
                 border: 1px solid black;
-            }
-            th {
+                vertical-align: top;
+            }}
+            th {{
                 background-color: #f2f2f2;
-            }
+            }}
         </style>
-        <script>
-            // Function to fetch and update the table
-            async function fetchData() {
-                const response = await fetch('/mock_data');
-                const data = await response.json();
-
-                // Update the table body
-                const tableBody = document.getElementById('table-body');
-                tableBody.innerHTML = '';  // Clear existing rows
-
-                data.forEach(item => {
-                    const sentimentLabel = item.sentiment === 1 ? 'Positive' : 'Negative';
-                    const row = `
-                        <tr>
-                            <td>${item.ticker}</td>
-                            <td>${item.VWAP}</td>
-                            <td>${item.time}</td>
-                            <td>${item.text}</td>
-                            <td>${sentimentLabel}</td>
-                            <td>${item.probability}</td>
-                            <td>${item.MA_Crossover === 1 ? '✅' : (item.MA_Crossover === -1 ? '❌' : 'Hold')}</td>
-                            <td>${item.RSI === 1 ? '✅' : (item.RSI === -1 ? '❌' : 'Hold')}</td>
-                            <td>${item.Breakout === 1 ? '✅' : (item.Breakout === -1 ? '❌' : 'Hold')}</td>
-                            <td>${item.Oscillator === 1 ? '✅' : (item.Oscillator === -1 ? '❌' : 'Hold')}</td>
-                            <td>${item.Signal === 1 ? '✅' : (item.Signal === -1 ? '❌' : 'Hold')}</td>
-                            <td>
-                                <form action="/buy" method="post">
-                                    <input type="hidden" name="ticker" value="${item.ticker}">
-                                    <input type="hidden" name="price" value="${item.VWAP}">
-                                    <input type="number" name="amount" min="1" required>
-                                    <button type="submit">Buy</button>
-                                </form>
-                            </td>
-                            <td>
-                                <form action="/sell" method="post">
-                                    <input type="hidden" name="ticker" value="${item.ticker}">
-                                    <input type="hidden" name="price" value="${item.VWAP}">
-                                    <input type="number" name="amount" min="1" required>
-                                    <button type="submit">Sell</button>
-                                </form>
-                            </td>
-                        </tr>
-                    `;
-                    tableBody.insertAdjacentHTML('beforeend', row);
-                });
-            }
-
-            // Refresh data every 5 seconds
-            setInterval(fetchData, 5000);
-            window.onload = fetchData;  // Fetch data when the page loads
-        </script>
     </head>
     <body>
         <h1>Stock Dashboard</h1>
-        <table border="1">
+        <table>
             <thead>
                 <tr>
                     <th>Ticker</th>
@@ -233,23 +227,46 @@ async def dashboard():
                     <th>Sell</th>
                 </tr>
             </thead>
-            <tbody id="table-body">
-                <!-- Rows will be dynamically populated here -->
+            <tbody>
+                <tr>
+                    <td>{escape(ticker)}</td>
+                    <td>{latest_vwap:.2f}</td>
+                    <td>{escape(current_time)}</td>
+                    <td style="text-align:left;">{escape(latest_news)}</td>
+                    <td>{"Positive" if sentiment == 1 else "Negative"}</td>
+                    <td>{probability}</td>
+                    <td>{signal_icon(ma_cross)}</td>
+                    <td>{signal_icon(rsi)}</td>
+                    <td>{signal_icon(breakout)}</td>
+                    <td>{signal_icon(osc)}</td>
+                    <td>{signal_icon(signal)}</td>
+                    <td>
+                        <form action="/buy" method="post">
+                            <input type="hidden" name="ticker" value="{escape(ticker)}">
+                            <input type="hidden" name="price" value="{latest_vwap}">
+                            <input type="number" name="amount" min="1" required>
+                            <button type="submit">Buy</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form action="/sell" method="post">
+                            <input type="hidden" name="ticker" value="{escape(ticker)}">
+                            <input type="hidden" name="price" value="{latest_vwap}">
+                            <input type="number" name="amount" min="1" required>
+                            <button type="submit">Sell</button>
+                        </form>
+                    </td>
+                </tr>
             </tbody>
         </table>
 
         <h2>Trade Log</h2>
         <div id="trade-log">
-            <ul>
-    """
-    if not trade_log:
-        html_content += "<p>No trades have been made yet.</p>"
-    else:
-        for entry in trade_log:
-            html_content += f"<li>{escape(entry)}</li>"
-    html_content += """
-            </ul>
+            {trade_log_html}
         </div>
+
+        <br><br>
+        <a href="/">Go Back</a>
     </body>
     </html>
     """
@@ -259,13 +276,13 @@ async def dashboard():
 async def buy(ticker: str = Form(...), amount: int = Form(...), price: float = Form(...)):
     trade_entry = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Bought {amount} shares of {ticker} @ {price}"
     trade_log.append(trade_entry)
-    return RedirectResponse(url="/", status_code=303)
+    return RedirectResponse(url="/dashboard", status_code=303)
 
 @app.post("/sell")
 async def sell(ticker: str = Form(...), amount: int = Form(...), price: float = Form(...)):
     trade_entry = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Sold {amount} shares of {ticker} @ {price}"
     trade_log.append(trade_entry)
-    return RedirectResponse(url="/", status_code=303)
+    return RedirectResponse(url="/dashboard", status_code=303)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)
