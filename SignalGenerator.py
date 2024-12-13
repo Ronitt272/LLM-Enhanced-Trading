@@ -14,6 +14,14 @@ class SignalGeneration:
         """
         self.vwap_buffers = defaultdict(lambda: deque(maxlen=buffer_size))  # VWAP buffer per ticker
         self.signals = {}  # Store the latest signals per ticker
+        self.random_prices = {
+          'AAPL':  [177.23, 172.89, 179.50, 174.46, 175.12, 178.31, 170.98, 179.03, 173.65, 176.77,
+        172.55, 177.45, 178.66, 171.95, 175.80, 175.33, 174.23, 179.00, 178.16, 170.52,
+        174.67, 176.09, 178.89, 170.34, 177.10, 171.63, 172.41, 179.28, 178.95, 177.54,
+        174.66, 173.14, 179.44, 171.99, 175.47, 178.64, 174.08, 178.23, 172.50, 177.91,
+        175.67, 179.20, 173.04, 171.37, 178.16, 170.64, 179.49, 176.35, 177.78, 174.25]
+        }
+
 
         # Configure logging
         logging.basicConfig(
@@ -150,7 +158,7 @@ class SignalGeneration:
         Returns:
             dict: Dictionary of signals (SMA, RSI, Stochastic).
         """
-        for ticker,vwap in self.vwap_buffers.items():
+        for ticker,vwap in self.random_prices.items():
 
             vwap_array = np.array(vwap)
             signals = {

@@ -546,3 +546,47 @@
 2024-12-13 16:34:02,140 - INFO - VWAP results updated
 2024-12-13 16:34:05,225 - INFO - VWAP updated for signal calculation at 2024-12-13 16:34:05.225948
 2024-12-13 16:34:05,515 - INFO - VWAP updated for signal calculation at 2024-12-13 16:34:05.515571
+2024-12-13 16:58:54,557 - INFO - Websocket connected
+2024-12-13 16:58:54,560 - INFO - Subscribed to: AAPL
+2024-12-13 16:59:01,735 - INFO - Attempting to summarize text of length 5157 characters.
+2024-12-13 16:59:02,126 - INFO - Cache dumped and saved to 20241213_165902.txt
+2024-12-13 16:59:02,128 - INFO - VWAP results updated
+2024-12-13 16:59:04,882 - INFO - HTTP Request: POST https://api.cohere.com/v1/summarize "HTTP/1.1 200 OK"
+2024-12-13 16:59:04,885 - INFO - Received summary from Cohere successfully.
+2024-12-13 16:59:04,887 - INFO - Aggregated and summarized text data successfully.
+2024-12-13 16:59:04,889 - INFO - Text aggregation and summarization completed at 2024-12-13 16:59:04.889150
+2024-12-13 16:59:05,477 - WARNING - No VWAP data received at 2024-12-13 16:59:05.477457
+2024-12-13 17:00:00,592 - INFO - Cache dumped and saved to 20241213_170000.txt
+2024-12-13 17:00:00,593 - INFO - VWAP results updated
+2024-12-13 17:00:01,695 - INFO - Attempting to summarize text of length 5157 characters.
+2024-12-13 17:00:05,305 - INFO - HTTP Request: POST https://api.cohere.com/v1/summarize "HTTP/1.1 200 OK"
+2024-12-13 17:00:05,306 - INFO - Received summary from Cohere successfully.
+2024-12-13 17:00:05,307 - INFO - Aggregated and summarized text data successfully.
+2024-12-13 17:00:05,307 - INFO - Text aggregation and summarization completed at 2024-12-13 17:00:05.307875
+2024-12-13 17:00:05,478 - INFO - VWAP updated for signal calculation at 2024-12-13 17:00:05.478218
+2024-12-13 17:02:21,743 - INFO - Websocket connected
+2024-12-13 17:02:21,743 - INFO - Subscribed to: AAPL
+2024-12-13 17:03:01,473 - INFO - Attempting to summarize text of length 5157 characters.
+2024-12-13 17:03:02,134 - INFO - Cache dumped and saved to 20241213_170302.txt
+2024-12-13 17:03:02,134 - INFO - VWAP results updated
+2024-12-13 17:03:04,229 - INFO - HTTP Request: POST https://api.cohere.com/v1/summarize "HTTP/1.1 200 OK"
+2024-12-13 17:03:04,231 - INFO - Received summary from Cohere successfully.
+2024-12-13 17:03:04,233 - INFO - Aggregated and summarized text data successfully.
+2024-12-13 17:03:04,234 - INFO - Text aggregation and summarization completed at 2024-12-13 17:03:04.234191
+2024-12-13 17:03:05,697 - INFO - VWAP updated for signal calculation at 2024-12-13 17:03:05.697429
+2024-12-13 17:04:00,994 - INFO - Attempting to summarize text of length 5157 characters.
+2024-12-13 17:04:02,129 - INFO - Cache dumped and saved to 20241213_170402.txt
+2024-12-13 17:04:02,129 - INFO - VWAP results updated
+2024-12-13 17:04:02,977 - INFO - HTTP Request: POST https://api.cohere.com/v1/summarize "HTTP/1.1 200 OK"
+2024-12-13 17:04:02,978 - INFO - Received summary from Cohere successfully.
+2024-12-13 17:04:02,981 - INFO - Aggregated and summarized text data successfully.
+2024-12-13 17:04:02,982 - INFO - Text aggregation and summarization completed at 2024-12-13 17:04:02.982648
+2024-12-13 17:04:05,698 - INFO - VWAP updated for signal calculation at 2024-12-13 17:04:05.698866
+2024-12-13 17:05:01,670 - INFO - Attempting to summarize text of length 5157 characters.
+2024-12-13 17:05:02,129 - INFO - Cache dumped and saved to 20241213_170502.txt
+2024-12-13 17:05:02,129 - INFO - VWAP results updated
+2024-12-13 17:05:05,736 - INFO - VWAP updated for signal calculation at 2024-12-13 17:05:05.736990
+2024-12-13 17:05:05,758 - INFO - HTTP Request: POST https://api.cohere.com/v1/summarize "HTTP/1.1 200 OK"
+2024-12-13 17:05:05,759 - INFO - Received summary from Cohere successfully.
+2024-12-13 17:05:05,762 - INFO - Aggregated and summarized text data successfully.
+2024-12-13 17:05:05,762 - INFO - Text aggregation and summarization completed at 2024-12-13 17:05:05.762122
