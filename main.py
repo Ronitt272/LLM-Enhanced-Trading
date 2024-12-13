@@ -23,17 +23,16 @@ text_pipeline = None
 signal_generator = None
 pipeline_threads = []
 last_selected_ticker = None
-
-# Track the currently running ticker to avoid unnecessary restarts
 current_ticker = None
 
 # Example keys (replace with your own)
 reddit_client_secret = 'sfFdYwuZWqofiqro51zGlKcJiC2YiQ'
 reddit_client_id = 'mNEnO4swPUjezEf92dxgxg'
 reddit_user_agent = 'LLM class project'
-news_api_key = '4703e4dcf50c47e1b390c81a6d0f0080'
-cohere_key = 'g1jNECQNHhEnlRhvMjba89qnPdeEPch9SvhmFMiN'
+news_api_key = '401ac3f457c64606a460107936a62709'
+cohere_key = 'rUFyKOiTQawP7WX2bNXNQDGtqyZ63YVZWxVCAba5'
 finnhub_token = 'ctahnvpr01qrt5hhnbg0ctahnvpr01qrt5hhnbgg'
+
 
 class CombinedData(BaseModel):
     ticker: str
@@ -48,23 +47,21 @@ class CombinedData(BaseModel):
     Oscillator: int
     Signal: int
 
+
 def stop_pipelines():
-    """
-    Placeholder for a pipeline stop logic.
-    If your pipeline classes support stopping, implement it here.
-    For now, just reset references.
-    """
     global stock_pipeline, text_pipeline, signal_generator, pipeline_threads
-    # In a real scenario, set flags or call shutdown methods on pipeline classes.
+    if stock_pipeline is not None:
+        stock_pipeline.stop()  # Mark the old pipeline as inactive
+
     stock_pipeline = None
     text_pipeline = None
     signal_generator = None
     pipeline_threads = []
 
+
 def start_pipelines():
     global stock_pipeline, text_pipeline, signal_generator, pipeline_threads, current_ticker
 
-    # Clear old threads
     pipeline_threads = []
 
     text_pipeline = TextFetchPipeline(
@@ -72,13 +69,13 @@ def start_pipelines():
         reddit_client_id,
         reddit_client_secret,
         reddit_user_agent,
-        cohere_key
+        cohere_key,
+        current_ticker
     )
 
     stock_pipeline = FinnhubWebSocket(finnhub_token, tickers)
     signal_generator = SignalGeneration(buffer_size=30)
 
-    # Start the pipelines in separate threads
     ws_thread = threading.Thread(target=stock_pipeline.start, daemon=True)
     ws_thread.start()
 
@@ -90,12 +87,14 @@ def start_pipelines():
 
     pipeline_threads = [ws_thread, vwap_thread, text_thread]
 
+
 def signal_icon(value: int) -> str:
     if value == 1:
         return "✅"
     elif value == -1:
         return "❌"
     return "Hold"
+
 
 @app.get("/", response_class=HTMLResponse)
 async def home():
@@ -116,26 +115,20 @@ async def home():
     """
     return HTMLResponse(content=html_content)
 
+
 @app.post("/select_ticker")
 async def select_ticker(ticker: str = Form(...)):
     global tickers, last_selected_ticker, current_ticker
 
     ticker = ticker.upper().strip()
 
-    # If the user selects the same ticker again, no need to restart pipelines
     if ticker != current_ticker:
-        # Stop existing pipelines if any
         stop_pipelines()
-
-        # Update the global ticker list to only contain the user-selected ticker
         tickers = [ticker]
         last_selected_ticker = ticker
         current_ticker = ticker
-
-        # Start fresh pipelines
         start_pipelines()
 
-    # Continuously wait until data is ready
     while True:
         if stock_pipeline is None or signal_generator is None or text_pipeline is None:
             time.sleep(0.5)
@@ -150,8 +143,9 @@ async def select_ticker(ticker: str = Form(...)):
 
         time.sleep(0.5)
 
-# Dummy trade log and endpoints for buying/selling
+
 trade_log = []
+
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard():
@@ -160,7 +154,6 @@ async def dashboard():
     if ticker is None:
         return HTMLResponse(content="<h2>No ticker selected.</h2>")
 
-    # Fetch data again
     if stock_pipeline is None or text_pipeline is None or signal_generator is None:
         return HTMLResponse(content="<h2>Pipeline not running. Please go back and select a ticker.</h2>")
 
@@ -174,10 +167,9 @@ async def dashboard():
     ma_cross = latest_signals.get("SMA", 0)
     rsi = latest_signals.get("RSI", 0)
     osc = latest_signals.get("Stochastic", 0)
-    signal = 1  # Placeholder aggregated signal
+    signal = 1
     breakout = 0
 
-    # Generate trade log HTML
     if not trade_log:
         trade_log_html = "<p>No trades have been made yet.</p>"
     else:
@@ -272,17 +264,20 @@ async def dashboard():
     """
     return HTMLResponse(content=html_content)
 
+
 @app.post("/buy")
 async def buy(ticker: str = Form(...), amount: int = Form(...), price: float = Form(...)):
     trade_entry = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Bought {amount} shares of {ticker} @ {price}"
     trade_log.append(trade_entry)
     return RedirectResponse(url="/dashboard", status_code=303)
 
+
 @app.post("/sell")
 async def sell(ticker: str = Form(...), amount: int = Form(...), price: float = Form(...)):
     trade_entry = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Sold {amount} shares of {ticker} @ {price}"
     trade_log.append(trade_entry)
     return RedirectResponse(url="/dashboard", status_code=303)
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)

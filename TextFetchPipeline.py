@@ -13,7 +13,7 @@ warnings.filterwarnings('ignore')
 
 
 class TextFetchPipeline:
-    def __init__(self, news_api_key, reddit_client_id, reddit_client_secret, reddit_user_agent, cohere_key):
+    def __init__(self, news_api_key, reddit_client_id, reddit_client_secret, reddit_user_agent, cohere_key, current_ticker):
         # Initialize APIs
         self.news_api = NewsApiClient(api_key=news_api_key)
         self.reddit = praw.Reddit(
@@ -30,8 +30,12 @@ class TextFetchPipeline:
         self.tickers = {
             'TSLA': "Tesla",
             'AMZN': "Amazon",
-            'AAPL': "Apple"
+            'AAPL': "Apple",
+            'META': "Meta",
+            "NFLX": "Netflix"
         }
+
+        self.ticker = current_ticker
 
         self.co = cohere.Client(cohere_key)
         self.agg_text = {}
@@ -50,7 +54,7 @@ class TextFetchPipeline:
         """
         Fetch latest news headlines for the ticker or company name.
         """
-        company_name = self.tickers[ticker]
+        company_name = self.tickers[self.ticker]
         now = datetime.utcnow()
         thirty_minutes_ago = now - timedelta(minutes=30)
         now_str = now.strftime('%Y-%m-%dT%H:%M:%S')
@@ -62,7 +66,8 @@ class TextFetchPipeline:
             from_param=thirty_minutes_ago_str,
             to=now_str,
             language="en",
-            sort_by="publishedAt"
+            sort_by="publishedAt",
+            page=5
         )
 
         new_articles = []
@@ -81,7 +86,7 @@ class TextFetchPipeline:
         """
         Fetch Reddit posts containing the ticker from r/wallstreetbets.
         """
-        company_name = self.tickers[ticker]
+        company_name = self.tickers[self.ticker]
         reddit_posts = []
         current_time_utc = datetime.utcnow().replace(tzinfo=pytz.UTC)  # Ensure current time is in UTC
 
@@ -112,11 +117,11 @@ class TextFetchPipeline:
         Fetch data from news and Reddit for all tickers.
         """
         combined_data = []
-        for ticker in self.tickers.keys():
-            # Fetch news and Reddit data for each ticker
-            news_data = self.fetch_news(ticker)
-            reddit_data = self.fetch_reddit(ticker)
-            combined_data.extend(news_data + reddit_data)
+        ticker = self.ticker
+        # Fetch news and Reddit data for each ticker
+        news_data = self.fetch_news(ticker)
+        reddit_data = self.fetch_reddit(ticker)
+        combined_data.extend(news_data + reddit_data)
 
         return combined_data
 

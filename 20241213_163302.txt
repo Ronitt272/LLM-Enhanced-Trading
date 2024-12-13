@@ -1,0 +1,1 @@
+Ticker: NFLX, VWAP: 918.61, Data: [{'price': 917, 'volume': 1, 'time': '2024-12-13 04:31:58 PM EST'}, {'price': 917.995, 'volume': 1, 'time': '2024-12-13 04:32:05 PM EST'}, {'price': 918.83, 'volume': 10, 'time': '2024-12-13 04:32:31 PM EST'}]

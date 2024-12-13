@@ -1,0 +1,1 @@
+Ticker: AAPL, VWAP: 248.15, Data: [{'price': 248.1492, 'volume': 3, 'time': '2024-12-13 04:10:58 PM EST'}]
