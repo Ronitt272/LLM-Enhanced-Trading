@@ -15,13 +15,12 @@ class SignalGeneration:
         self.vwap_buffers = defaultdict(lambda: deque(maxlen=buffer_size))  # VWAP buffer per ticker
         self.signals = {}  # Store the latest signals per ticker
         self.random_prices = {
-          'AAPL':  [177.23, 172.89, 179.50, 174.46, 175.12, 178.31, 170.98, 179.03, 173.65, 176.77,
-        172.55, 177.45, 178.66, 171.95, 175.80, 175.33, 174.23, 179.00, 178.16, 170.52,
-        174.67, 176.09, 178.89, 170.34, 177.10, 171.63, 172.41, 179.28, 178.95, 177.54,
-        174.66, 173.14, 179.44, 171.99, 175.47, 178.64, 174.08, 178.23, 172.50, 177.91,
-        175.67, 179.20, 173.04, 171.37, 178.16, 170.64, 179.49, 176.35, 177.78, 174.25]
+          'AAPL':  [100.00, 100.50, 101.00, 101.50, 102.00, 102.50, 103.00, 103.50, 104.00, 104.50, 
+         104.75, 105.00, 105.25, 105.50, 105.75, 106.00, 105.75, 105.50, 105.25, 105.00, 
+         104.75, 104.50, 104.25, 104.00, 103.75, 103.50, 103.25, 103.00, 102.75, 102.50, 
+         102.25, 102.00, 101.75, 101.50, 101.25, 101.00, 100.75, 100.50, 100.25, 100.00, 
+         99.75, 99.50, 99.25, 99.00, 98.75, 98.50, 98.25, 98.00, 97.75, 97.50]
         }
-
 
         # Configure logging
         logging.basicConfig(
@@ -61,8 +60,18 @@ class SignalGeneration:
                 self.add_vwap(latest_vwap)
                 logging.info(f"VWAP updated for signal calculation at {datetime.now()}")
             
-            if not latest_vwap:
-                logging.warning(f"No VWAP data received at {datetime.now()}")
+            # if not latest_vwap:
+            #     logging.warning(f"No VWAP data received at {datetime.now()}")
+            
+            else: 
+                latest_vwap = {
+                    'AAPL': 100
+                }
+                self.add_vwap(latest_vwap)
+                logging.info(f"Placeholder for weekend testing is added")
+                
+            
+                
                         
 
     def sma_signal(self, vwap_array, fast_window=5, slow_window=30):

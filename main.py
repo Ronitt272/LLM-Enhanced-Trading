@@ -134,9 +134,12 @@ async def select_ticker(ticker: str = Form(...)):
             time.sleep(0.5)
             continue
 
-        latest_vwap = stock_pipeline.latest_vwap.get(ticker, None)
-        latest_text = text_pipeline.agg_text.get(ticker, None)
+        # latest_vwap = stock_pipeline.latest_vwap.get(ticker, None)
+        # latest_text = text_pipeline.agg_text.get(ticker, None)
+        latest_vwap = 100
+        latest_text = "It is weekend"
         latest_signals = signal_generator.get_signals().get(ticker, {})
+        
 
         if latest_vwap is not None and latest_text is not None and len(latest_signals) > 0:
             return RedirectResponse(url="/dashboard", status_code=303)
