@@ -1,0 +1,52 @@
+2024-12-16 09:40:49,540 - INFO - Websocket connected
+2024-12-16 09:40:49,540 - INFO - Subscribed to: AAPL
+2024-12-16 09:42:43,129 - INFO - Websocket connected
+2024-12-16 09:42:43,131 - INFO - Subscribed to: AAPL
+2024-12-16 09:43:00,681 - INFO - Cache dumped and saved to 20241216_094300.txt
+2024-12-16 09:43:00,681 - INFO - VWAP results updated
+2024-12-16 09:43:00,990 - INFO - Attempting to summarize text of length 3441 characters.
+2024-12-16 09:43:03,374 - INFO - HTTP Request: POST https://api.cohere.com/v1/summarize "HTTP/1.1 200 OK"
+2024-12-16 09:43:03,375 - INFO - Received summary from Cohere successfully.
+2024-12-16 09:43:03,394 - INFO - Aggregated and summarized text data successfully.
+2024-12-16 09:43:03,394 - INFO - Text aggregation and summarization completed at 2024-12-16 09:43:03.394977
+2024-12-16 09:43:05,045 - INFO - VWAP updated for signal calculation at 2024-12-16 09:43:05.045882
+2024-12-16 09:44:00,619 - INFO - Cache dumped and saved to 20241216_094400.txt
+2024-12-16 09:44:00,620 - INFO - VWAP results updated
+2024-12-16 09:44:01,214 - INFO - Attempting to summarize text of length 3441 characters.
+2024-12-16 09:44:05,046 - INFO - VWAP updated for signal calculation at 2024-12-16 09:44:05.046865
+2024-12-16 09:44:07,206 - INFO - HTTP Request: POST https://api.cohere.com/v1/summarize "HTTP/1.1 200 OK"
+2024-12-16 09:44:07,207 - INFO - Received summary from Cohere successfully.
+2024-12-16 09:44:07,211 - INFO - Aggregated and summarized text data successfully.
+2024-12-16 09:44:07,211 - INFO - Text aggregation and summarization completed at 2024-12-16 09:44:07.211745
+2024-12-16 09:45:00,391 - INFO - Cache dumped and saved to 20241216_094500.txt
+2024-12-16 09:45:00,391 - INFO - VWAP results updated
+2024-12-16 09:45:00,962 - INFO - Attempting to summarize text of length 3441 characters.
+2024-12-16 09:45:04,390 - INFO - HTTP Request: POST https://api.cohere.com/v1/summarize "HTTP/1.1 200 OK"
+2024-12-16 09:45:04,391 - INFO - Received summary from Cohere successfully.
+2024-12-16 09:45:04,393 - INFO - Aggregated and summarized text data successfully.
+2024-12-16 09:45:04,393 - INFO - Text aggregation and summarization completed at 2024-12-16 09:45:04.393555
+2024-12-16 09:45:05,047 - INFO - VWAP updated for signal calculation at 2024-12-16 09:45:05.047641
+2024-12-16 09:46:39,839 - INFO - Websocket connected
+2024-12-16 09:46:39,840 - INFO - Subscribed to: AAPL
+2024-12-16 09:46:45,681 - ERROR - WebSocket Error: Connection to remote host was lost.
+2024-12-16 09:46:45,681 - ERROR - Connection to remote host was lost. - goodbye
+2024-12-16 09:46:45,681 - WARNING - WebSocket closed.
+2024-12-16 09:46:45,681 - WARNING - Attempting to reconnect in 3 seconds...
+2024-12-16 09:46:48,710 - ERROR - WebSocket Error: Handshake status 502 Bad Gateway -+-+- {'server': 'nginx/1.18.0', 'date': 'Mon, 16 Dec 2024 14:46:48 GMT', 'content-type': 'text/html', 'content-length': '157', 'connection': 'keep-alive'} -+-+- b'<html>\r\n<head><title>502 Bad Gateway</title></head>\r\n<body>\r\n<center><h1>502 Bad Gateway</h1></center>\r\n<hr><center>nginx/1.18.0</center>\r\n</body>\r\n</html>\r\n'
+2024-12-16 09:46:48,711 - ERROR - Handshake status 502 Bad Gateway -+-+- {'server': 'nginx/1.18.0', 'date': 'Mon, 16 Dec 2024 14:46:48 GMT', 'content-type': 'text/html', 'content-length': '157', 'connection': 'keep-alive'} -+-+- b'<html>\r\n<head><title>502 Bad Gateway</title></head>\r\n<body>\r\n<center><h1>502 Bad Gateway</h1></center>\r\n<hr><center>nginx/1.18.0</center>\r\n</body>\r\n</html>\r\n' - goodbye
+2024-12-16 09:46:48,711 - WARNING - WebSocket closed.
+2024-12-16 09:46:48,711 - WARNING - Attempting to reconnect in 6 seconds...
+2024-12-16 09:46:54,747 - ERROR - WebSocket Error: Handshake status 502 Bad Gateway -+-+- {'server': 'nginx/1.18.0', 'date': 'Mon, 16 Dec 2024 14:46:54 GMT', 'content-type': 'text/html', 'content-length': '157', 'connection': 'keep-alive'} -+-+- b'<html>\r\n<head><title>502 Bad Gateway</title></head>\r\n<body>\r\n<center><h1>502 Bad Gateway</h1></center>\r\n<hr><center>nginx/1.18.0</center>\r\n</body>\r\n</html>\r\n'
+2024-12-16 09:46:54,748 - ERROR - Handshake status 502 Bad Gateway -+-+- {'server': 'nginx/1.18.0', 'date': 'Mon, 16 Dec 2024 14:46:54 GMT', 'content-type': 'text/html', 'content-length': '157', 'connection': 'keep-alive'} -+-+- b'<html>\r\n<head><title>502 Bad Gateway</title></head>\r\n<body>\r\n<center><h1>502 Bad Gateway</h1></center>\r\n<hr><center>nginx/1.18.0</center>\r\n</body>\r\n</html>\r\n' - goodbye
+2024-12-16 09:46:54,748 - WARNING - WebSocket closed.
+2024-12-16 09:46:54,748 - WARNING - Attempting to reconnect in 12 seconds...
+2024-12-16 09:47:01,686 - INFO - Attempting to summarize text of length 3441 characters.
+2024-12-16 09:47:05,831 - INFO - Placeholder for weekend testing is added
+2024-12-16 09:47:06,675 - INFO - HTTP Request: POST https://api.cohere.com/v1/summarize "HTTP/1.1 200 OK"
+2024-12-16 09:47:06,676 - INFO - Received summary from Cohere successfully.
+2024-12-16 09:47:06,677 - INFO - Aggregated and summarized text data successfully.
+2024-12-16 09:47:06,678 - INFO - Text aggregation and summarization completed at 2024-12-16 09:47:06.678776
+2024-12-16 09:47:06,790 - INFO - Websocket connected
+2024-12-16 09:47:06,790 - INFO - Subscribed to: AAPL
+2024-12-16 09:47:07,807 - INFO - Cache dumped and saved to 20241216_094707.txt
+2024-12-16 09:47:07,807 - INFO - VWAP results updated

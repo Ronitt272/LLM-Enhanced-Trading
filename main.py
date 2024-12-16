@@ -134,10 +134,8 @@ async def select_ticker(ticker: str = Form(...)):
             time.sleep(0.5)
             continue
 
-        # latest_vwap = stock_pipeline.latest_vwap.get(ticker, None)
-        # latest_text = text_pipeline.agg_text.get(ticker, None)
-        latest_vwap = 100
-        latest_text = "It is weekend"
+        latest_vwap = stock_pipeline.latest_vwap.get(ticker, None)
+        latest_text = text_pipeline.agg_text.get(ticker, None)
         latest_signals = signal_generator.get_signals().get(ticker, {})
         
 
@@ -162,7 +160,7 @@ async def dashboard():
 
     latest_vwap = stock_pipeline.latest_vwap.get(ticker, 0.0)
     latest_signals = signal_generator.get_signals().get(ticker, {})
-    latest_news = text_pipeline.agg_text.get(ticker, "No data available.")
+    latest_news = text_pipeline.agg_text.get(ticker, "No data available!")
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     sentiment = 1
@@ -187,18 +185,35 @@ async def dashboard():
     <head>
         <title>Stock Dashboard for {escape(ticker)}</title>
         <style>
+            body {{
+                font-family: Arial, sans-serif;
+                margin: 20px;
+            }}
             table {{
                 width: 100%;
                 border-collapse: collapse;
             }}
             th, td {{
-                padding: 10px;
+                padding: 12px;
                 text-align: center;
                 border: 1px solid black;
                 vertical-align: top;
             }}
             th {{
                 background-color: #f2f2f2;
+                font-size: 16px;
+            }}
+            td.text-column {{
+                max-width: 300px;
+                text-align: left;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+            }}
+            .signal-icon {{
+                font-size: 20px;
+            }}
+            h1 {{
+                text-align: center;
             }}
         </style>
     </head>
@@ -227,14 +242,14 @@ async def dashboard():
                     <td>{escape(ticker)}</td>
                     <td>{latest_vwap:.2f}</td>
                     <td>{escape(current_time)}</td>
-                    <td style="text-align:left;">{escape(latest_news)}</td>
+                    <td class="text-column">{escape(latest_news)}</td>
                     <td>{"Positive" if sentiment == 1 else "Negative"}</td>
                     <td>{probability}</td>
-                    <td>{signal_icon(ma_cross)}</td>
-                    <td>{signal_icon(rsi)}</td>
-                    <td>{signal_icon(breakout)}</td>
-                    <td>{signal_icon(osc)}</td>
-                    <td>{signal_icon(signal)}</td>
+                    <td class="signal-icon">{signal_icon(ma_cross)}</td>
+                    <td class="signal-icon">{signal_icon(rsi)}</td>
+                    <td class="signal-icon">{signal_icon(breakout)}</td>
+                    <td class="signal-icon">{signal_icon(osc)}</td>
+                    <td class="signal-icon">{signal_icon(signal)}</td>
                     <td>
                         <form action="/buy" method="post">
                             <input type="hidden" name="ticker" value="{escape(ticker)}">
@@ -266,6 +281,7 @@ async def dashboard():
     </html>
     """
     return HTMLResponse(content=html_content)
+
 
 
 @app.post("/buy")

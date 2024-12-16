@@ -150,8 +150,8 @@ class TextFetchPipeline:
             )
             logging.info("Received summary from Cohere successfully.")
             logging.debug(f"Summary result: {response.summary}")
-            # return response.summary
-            return "it is weekend, so placeholder for testing"
+            return response.summary
+    
         except Exception as e:
             logging.error(f"Error while summarizing text: {str(e)}")
             return text
